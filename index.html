@@ -3,30 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حجز موعد العيادة</title>
+    <title>عيادة الدكتور علي محمد الجشعمي</title>
+    <!-- استدعاء خط Cairo الاحترافي -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #f0f4f8; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-        h2, h3 { color: #1e293b; text-align: center; margin-top: 0; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; color: #334155; }
-        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
-        input:focus, textarea:focus, select:focus { border-color: #25D366; }
-        button { width: 100%; padding: 12px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        button:hover { background: #1eb854; }
-        .schedule-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-        .schedule-table th, .schedule-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-size: 14px; }
-        .schedule-table th { background-color: #f8fafc; color: #334155; }
-        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; color: white; }
-        .available { background-color: #22c55e; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: #f1f5f9; margin: 0; padding: 20px 10px; color: #1e293b; }
+        .container { max-width: 550px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+        
+        .doctor-header { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
+        .doctor-title { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 5px 0; }
+        .doctor-sub { font-size: 14px; color: #64748b; font-weight: 600; margin: 0; }
+        
+        .day-badge { background: #e0f2fe; color: #0369a1; text-align: center; font-weight: 700; font-size: 15px; padding: 8px 15px; border-radius: 30px; margin-bottom: 20px; }
+        
+        .schedule-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 25px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .schedule-table th, .schedule-table td { padding: 12px; text-align: center; font-size: 14px; }
+        .schedule-table th { background-color: #0f172a; color: #ffffff; font-weight: 700; }
+        .schedule-table td { border-bottom: 1px solid #f1f5f9; }
+        
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: 700; font-size: 12px; color: white; }
+        .available { background-color: #10b981; }
         .booked { background-color: #ef4444; }
+
+        .form-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 15px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #475569; font-size: 13px; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 14px; outline: none; transition: border-color 0.2s; background: #fafafa; }
+        input:focus, textarea:focus, select:focus { border-color: #0284c7; background: #ffffff; }
+        
+        .btn-whatsapp { width: 100%; padding: 14px; background: #25D366; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-whatsapp:hover { background: #1eb854; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 id="dayTitle">جدول المواعيد</h2>
+    <div class="doctor-header">
+        <h1 class="doctor-title">عيادة الدكتور علي محمد الجشعمي</h1>
+        <p class="doctor-sub">نظام حجز المواعيد الإلكتروني</p>
+    </div>
+
+    <div class="day-badge" id="dayTitle">جدول المواعيد</div>
     
     <table class="schedule-table">
         <thead>
@@ -39,7 +60,7 @@
         <tbody id="patientScheduleBody"></tbody>
     </table>
 
-    <h3>استمارة حجز موعد</h3>
+    <div class="form-title">تعبئة استمارة الحجز</div>
     <form id="bookingForm">
         <div class="form-group">
             <label>اختر رقم الحجز المتاح:</label>
@@ -61,7 +82,7 @@
             <label>تفاصيل الحجز / الأعراض:</label>
             <textarea id="notes" rows="3" placeholder="اكتب سبب الزيارة..." required></textarea>
         </div>
-        <button type="submit">تأكيد إرسال الحجز عبر الواتساب</button>
+        <button type="submit" class="btn-whatsapp">تأكيد إرسال الحجز عبر الواتساب</button>
     </form>
 </div>
 
@@ -149,7 +170,7 @@
             db.ref('bookings/' + selectedSlotId).set(bookingData).then(() => {
                 db.ref('clinic_day').once('value').then(daySnap => {
                     const currentDay = daySnap.val() || 'اليوم';
-                    const message = `*طلب حجز موعد جديد*\n\n` +
+                    const message = `*طلب حجز موعد - عيادة د. علي محمد الجشعمي*\n\n` +
                         `*اليوم:* ${currentDay}\n` +
                         `*رقم الحجز:* #${bookingData.slotId}\n` +
                         `*الموعد:* ${bookingData.time}\n` +
