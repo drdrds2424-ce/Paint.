@@ -172,68 +172,7 @@
 </script>
 </body>
 </html>
-tSchedule();
-    }
-
-    function deleteSlot(id) {
-        if(confirm("هل أنت تأكد من حذف الرقم #" + id + "؟")) {
-            var slots = getSlots().filter(function(s) { return s.id != id; });
-            localStorage.setItem('clinic_slots', JSON.stringify(slots));
-            loadDoctorSlots();
-            renderPatientSchedule();
-        }
-    }
-
-    function loadDoctorSlots() {
-        var slots = getSlots();
-        var tbody = document.getElementById('doctorSlotsTable');
-        tbody.innerHTML = '';
-        
-        slots.forEach(function(s) {
-            tbody.innerHTML += '<tr>' +
-                '<td><strong>#' + s.id + '</strong></td>' +
-                '<td>' + s.time + '</td>' +
-                '<td><button class="btn-red" style="padding: 5px 10px; font-size: 12px; width: auto;" onclick="deleteSlot(' + s.id + ')">حذف</button></td>' +
-            '</tr>';
-        });
-    }
-
-    function switchTab(tab) {
-        if(tab === 'patient') {
-            document.getElementById('patient-view').classList.remove('hidden');
-            document.getElementById('doctor-view').classList.add('hidden');
-            document.getElementById('btn-patient').classList.add('active');
-            document.getElementById('btn-doctor').classList.remove('active');
-            renderPatientSchedule();
-        } else {
-            document.getElementById('patient-view').classList.add('hidden');
-            document.getElementById('doctor-view').classList.remove('hidden');
-            document.getElementById('btn-doctor').classList.add('active');
-            document.getElementById('btn-patient').classList.remove('active');
-        }
-    }
-
-    document.getElementById('bookingForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        var selectedSlotId = document.getElementById('slotSelect').value;
-        if (!selectedSlotId) {
-            alert("يرجى اختيار رقم حجز متاح");
-            return;
-        }
-
-        var slotInfo = getSlots().find(function(s) { return s.id == selectedSlotId; });
-
-        var data = {
-            slotId: selectedSlotId,
-            time: slotInfo.time,
-            name: document.getElementById('name').value,
-            phone: document.getElementById('phone').value,
-            address: document.getElementById('address').value,
-            notes: document.getElementById('notes').value
-        };
-
-        var bookings = JSON.parse(localStorage.getItem('clinic_bookings') || '[]');
+);
         bookings.push(data);
         localStorage.setItem('clinic_bookings', JSON.stringify(bookings));
 
