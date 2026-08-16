@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة إدارية - الدكتور</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+        .container { max-width: 750px; margin: 0 auto; background: #1e293b; padding: 25px; border-radius: 12px; }
+        h2, h3 { text-align: center; color: #38bdf8; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #94a3b8; }
+        input { width: 100%; padding: 12px; border: 1px solid #334155; background: #0f172a; color: white; border-radius: 8px; }
+        button { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        button:hover { background: #0369a1; }
+        .btn-red { background: #dc2626; } .btn-red:hover { background: #b91c1c; }
+        .schedule-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; margin-top: 10px; }
+        .schedule-table th, .schedule-table td { border: 1px solid #334155; padding: 10px; text-align: center; font-size: 14px; }
+        .schedule-table th { background-color: #0f172a; color: #38bdf8; }
+        .control-panel { background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .flex-row { display: flex; gap: 10px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>لوحة تحكم إدارة المواعيد</h2>
+
+    <div id="loginSection" class="form-group">
+        <label>كلمة المرور الخاصة بالدكتور:</label>
+        <input type="password" id="docPass" placeholder="أدخل كلمة المرور">
+        <button style="margin-top: 10px;" onclick="loginDoctor()">تسجيل الدخول</button>
+    </div>
+
+    <div id="doctorData" class="hidden">
+        <div class="control-panel">
+            <h3>إعدادات اليوم والمواعيد</h3>
+            <div class="form-group">
+                <label>تحديد اليوم الحالي:</label>
+                <div class="flex-row">
+                    <input type="text" id="currentDayInput" placeholder="مثال: الأحد 2026/08/16">
+                    <button style="width: 130px;" onclick="saveDay()">حفظ اليوم</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>إضافة رقم وموعد جديد:</label>
+                <div class="flex-row">
+                    <input type="number" id="newSlotId" placeholder="الرقم" style="width: 30%;">
+                    <input type="text" id="newSlotTime" placeholder="الوقت (06:00 مساءً)" style="width: 50%;">
+                    <button style="width: 20%;" onclick="addSlot()">إضافة</button>
+                </div>
+            </div>
+        </div>
+
+        <h3>جدول المواعيد المتاحة</h3>
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>الرقم</th>
+                    <th>الوقت</th>
+                    <th>الإجراء</th>
+                </tr>
+            </thead>
+            <tbody id="doctorSlotsTable"></tbody>
+        </table>
+
+        <hr style="border-color: #334155; margin: 25px 0;">
+
+        <h3>سجل حجز المرضى الحي (Realtime)</h3>
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>الرقم</th>
+                    <th>الوقت</th>
+                    <th>الاسم</th>
+                    <th>الهاتف</th>
+                    <th>التفاصيل</th>
+                    <th>إجراء</th>
+                </tr>
+            </thead>
+            <tbody id="appointmentsTable"></tbody>
+        </table>
+        
+        <button class="btn-red" style="margin-top: 15px;" onclick="resetAllBookings()">مسح جميع الحجوزات</button>
+    </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA083dRD4EYwVj-Y--AsqOzpz7ewhZlmYo",
+      authDomain: "clinic-system-98d2e.firebaseapp.com",
+      databaseURL: "https://clinic-system-98d2e-default-rtdb.firebaseio.com",
+      projectId: "clinic-system-98d2e",
+      storageBucket: "clinic-system-98d2e.firebasestorage.app",
+      messagingSenderId: "1025874349100",
+      appId: "1:1025874349100:web:6fe72cebe668705a4c1589"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function loginDoctor() {
+        const pass = document.getElementById('docPass').value;
+        if(pass === "123456") { 
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('doctorData').classList.remove('hidden');
+            initDashboard();
+        } else {
+            alert("كلمة المرور غير صحيحة!");
+        }
+    }
+
+    function initDashboard() {
+        // جلب اليوم الحالي
+        db.ref('clinic_day').on('value', snap => {
+            if(snap.exists()) document.getElementById('currentDayInput').value = snap.val();
+        });
+
+        // جلب المواعيد والحجوزات مباشرة
+        db.ref().on('value', snap => {
+            const data = snap.val() || {};
+            const slots = data.slots || [
+                { id: 1, time: "04:00 مساءً" },
+                { id: 2, time: "04:30 مساءً" },
+                { id: 3, time: "05:00 مساءً" },
+                { id: 4, time: "05:30 مساءً" },
+                { id: 5, time: "06:00 مساءً" }
+            ];
+            const bookings = data.bookings || {};
+
+            // عرض جدول الأوقات
+            const slotsTable = document.getElementById('doctorSlotsTable');
+            slotsTable.innerHTML = '';
+            slots.forEach(s => {
+                slotsTable.innerHTML += `<tr>
+                    <td><strong>#${s.id}</strong></td>
+                    <td>${s.time}</td>
+                    <td><button class="btn-red" style="padding: 5px 10px; font-size: 12px; width: auto;" onclick="deleteSlot(${s.id})">حذف</button></td>
+                </tr>`;
+            });
+
+            // عرض الحجوزات الحالية
+            const appTable = document.getElementById('appointmentsTable');
+            appTable.innerHTML = '';
+            const bookingKeys = Object.keys(bookings);
+            
+            if(bookingKeys.length === 0) {
+                appTable.innerHTML = '<tr><td colspan="6">لا توجد مواعيد محجوزة حالياً</td></tr>';
+            } else {
+                bookingKeys.forEach(key => {
+                    const b = bookings[key];
+                    appTable.innerHTML += `<tr>
+                        <td><strong>#${b.slotId}</strong></td>
+                        <td>${b.time}</td>
+                        <td>${b.name}</td>
+                        <td>${b.phone}</td>
+                        <td>${b.notes}</td>
+                        <td><button class="btn-red" style="padding: 4px 8px; font-size: 11px; width: auto;" onclick="cancelBooking('${b.slotId}')">إلغاء</button></td>
+                    </tr>`;
+                });
+            }
+        });
+    }
+
+    function saveDay() {
+        const dayVal = document.getElementById('currentDayInput').value;
+        if(dayVal) {
+            db.ref('clinic_day').set(dayVal).then(() => alert("تم حفظ اليوم بنجاح"));
+        }
+    }
+
+    function addSlot() {
+        const id = parseInt(document.getElementById('newSlotId').value);
+        const time = document.getElementById('newSlotTime').value;
+        if(!id || !time) return alert("يرجى ملء الحقول");
+
+        db.ref('slots').once('value').then(snap => {
+            let slots = snap.val() || [
+                { id: 1, time: "04:00 مساءً" },
+                { id: 2, time: "04:30 مساءً" },
+                { id: 3, time: "05:00 مساءً" },
+                { id: 4, time: "05:30 مساءً" },
+                { id: 5, time: "06:00 مساءً" }
+            ];
+            slots = slots.filter(s => s.id !== id);
+            slots.push({ id, time });
+            slots.sort((a,b) => a.id - b.id);
+            
+            db.ref('slots').set(slots).then(() => {
+                document.getElementById('newSlotId').value = '';
+                document.getElementById('newSlotTime').value = '';
+            });
+        });
+    }
+
+    function deleteSlot(id) {
+        if(confirm(`هل أنت تأكد من حذف الرقم #${id}؟`)) {
+            db.ref('slots').once('value').then(snap => {
+                let slots = snap.val() || [];
+                slots = slots.filter(s => s.id !== id);
+                db.ref('slots').set(slots);
+            });
+        }
+    }
+
+    function cancelBooking(slotId) {
+        if(confirm("هل تريد إلغاء هذا الحجز؟")) {
+            db.ref('bookings/' + slotId).remove();
+        }
+    }
+
+    function resetAllBookings() {
+        if(confirm("هل أنت تأكد من مسح كافة الحجوزات؟")) {
+            db.ref('bookings').remove();
+        }
+    }
+</script>
+</body>
+</html>
