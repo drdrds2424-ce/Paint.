@@ -65,7 +65,6 @@
     </form>
 </div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -84,13 +83,11 @@
     const db = firebase.database();
     const DOCTOR_PHONE = "9647854777816";
 
-    // جلب عنوان اليوم
     db.ref('clinic_day').on('value', snapshot => {
         const day = snapshot.val() || "اليوم";
         document.getElementById('dayTitle').textContent = "جدول المواعيد - " + day;
     });
 
-    // جلب المواعيد المحجوزة والأوقات المتاحة
     db.ref().on('value', snapshot => {
         const data = snapshot.val() || {};
         const slots = data.slots || [
@@ -129,7 +126,6 @@
         });
     });
 
-    // إرسال الحجز
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -150,7 +146,6 @@
                 timestamp: Date.now()
             };
 
-            // حفظ الحجز في Firebase
             db.ref('bookings/' + selectedSlotId).set(bookingData).then(() => {
                 db.ref('clinic_day').once('value').then(daySnap => {
                     const currentDay = daySnap.val() || 'اليوم';
@@ -169,71 +164,6 @@
             });
         });
     });
-</script>
-</body>
-</html>
-);
-        bookings.push(data);
-        localStorage.setItem('clinic_bookings', JSON.stringify(bookings));
-
-        renderPatientSchedule();
-
-        var currentDay = localStorage.getItem('clinic_day') || 'اليوم';
-        var message = "*طلب حجز موعد جديد*\n\n" +
-            "*اليوم:* " + currentDay + "\n" +
-            "*رقم الحجز:* #" + data.slotId + "\n" +
-            "*الموعد:* " + data.time + "\n" +
-            "*الاسم:* " + data.name + "\n" +
-            "*الهاتف:* " + data.phone + "\n" +
-            "*العنوان:* " + data.address + "\n" +
-            "*التفاصيل:* " + data.notes;
-
-        var url = "https://wa.me/" + DOCTOR_PHONE + "?text=" + encodeURIComponent(message);
-        window.open(url, '_blank');
-        
-        document.getElementById('bookingForm').reset();
-    });
-
-    function loginDoctor() {
-        var pass = document.getElementById('docPass').value;
-        if(pass === "123456") { 
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('doctorData').classList.remove('hidden');
-            loadDoctorSlots();
-            loadAppointments();
-        } else {
-            alert("كلمة المرور غير صحيحة!");
-        }
-    }
-
-    function loadAppointments() {
-        var bookings = JSON.parse(localStorage.getItem('clinic_bookings') || '[]');
-        var tbody = document.getElementById('appointmentsTable');
-        tbody.innerHTML = '';
-        if(bookings.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد مواعيد محجوزة حالياً</td></tr>';
-            return;
-        }
-        bookings.forEach(function(b) {
-            tbody.innerHTML += '<tr>' +
-                '<td><strong>#' + b.slotId + '</strong></td>' +
-                '<td>' + b.time + '</td>' +
-                '<td>' + b.name + '</td>' +
-                '<td>' + b.phone + '</td>' +
-                '<td>' + b.notes + '</td>' +
-            '</tr>';
-        });
-    }
-
-    function resetBookings() {
-        if(confirm("هل أنت تأكد من مسح قائمة المواعيد المحجوزة؟")) {
-            localStorage.removeItem('clinic_bookings');
-            loadAppointments();
-            renderPatientSchedule();
-        }
-    }
-
-    initSystem();
 </script>
 </body>
 </html>
