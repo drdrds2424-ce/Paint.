@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام حجز العيادة</title>
+    <title>حجز موعد العيادة</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f4f8; margin: 0; padding: 20px; }
-        .container { max-width: 700px; margin: 20px auto; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        .container { max-width: 600px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
         h2, h3 { color: #1e293b; text-align: center; margin-top: 0; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: 600; color: #334155; }
@@ -15,221 +15,164 @@
         input:focus, textarea:focus, select:focus { border-color: #25D366; }
         button { width: 100%; padding: 12px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button:hover { background: #1eb854; }
-        .btn-blue { background: #0284c7; } .btn-blue:hover { background: #0369a1; }
-        .btn-red { background: #dc2626; } .btn-red:hover { background: #b91c1c; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { background: #e2e8f0; color: #475569; flex: 1; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .tab-btn.active { background: #0284c7; color: white; }
-        .hidden { display: none; }
         .schedule-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
         .schedule-table th, .schedule-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-size: 14px; }
         .schedule-table th { background-color: #f8fafc; color: #334155; }
         .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; color: white; }
         .available { background-color: #22c55e; }
         .booked { background-color: #ef4444; }
-        .control-panel { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .flex-row { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="tabs">
-        <button class="tab-btn active" id="btn-patient" onclick="switchTab('patient')">حجز مريض</button>
-        <button class="tab-btn" id="btn-doctor" onclick="switchTab('doctor')">لوحة التحكم (الدكتور)</button>
-    </div>
+    <h2 id="dayTitle">جدول المواعيد</h2>
+    
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>رقم الحجز</th>
+                <th>الوقت التقديري</th>
+                <th>الحالة</th>
+            </tr>
+        </thead>
+        <tbody id="patientScheduleBody"></tbody>
+    </table>
 
-    <!-- واجهة المريض -->
-    <div id="patient-view">
-        <h2 id="dayTitle">جدول المواعيد - اليوم</h2>
-        
-        <table class="schedule-table">
-            <thead>
-                <tr>
-                    <th>رقم الحجز</th>
-                    <th>الوقت التقديري</th>
-                    <th>الحالة</th>
-                </tr>
-            </thead>
-            <tbody id="patientScheduleBody"></tbody>
-        </table>
-
-        <h3>استمارة حجز موعد</h3>
-        <form id="bookingForm">
-            <div class="form-group">
-                <label>اختر رقم الحجز المتاح:</label>
-                <select id="slotSelect" required></select>
-            </div>
-            <div class="form-group">
-                <label>اسم المريض الكامل:</label>
-                <input type="text" id="name" placeholder="أدخل اسمك الثلاثي" required>
-            </div>
-            <div class="form-group">
-                <label>رقم الهاتف:</label>
-                <input type="tel" id="phone" placeholder="07xxxxxxxx" required>
-            </div>
-            <div class="form-group">
-                <label>العنوان / السكن:</label>
-                <input type="text" id="address" placeholder="المحافظة - المنطقة" required>
-            </div>
-            <div class="form-group">
-                <label>تفاصيل الحجز / الأعراض:</label>
-                <textarea id="notes" rows="3" placeholder="اكتب سبب الزيارة..." required></textarea>
-            </div>
-            <button type="submit">تأكيد إرسال الحجز عبر الواتساب</button>
-        </form>
-    </div>
-
-    <!-- لوحة التحكم للدكتور -->
-    <div id="doctor-view" class="hidden">
-        <h2>لوحة إدارة العيادة</h2>
-        <div id="loginSection" class="form-group">
-            <label>كلمة المرور للدخول:</label>
-            <input type="password" id="docPass" placeholder="أدخل كلمة المرور">
-            <button class="btn-blue" style="margin-top: 10px;" onclick="loginDoctor()">تسجيل الدخول</button>
+    <h3>استمارة حجز موعد</h3>
+    <form id="bookingForm">
+        <div class="form-group">
+            <label>اختر رقم الحجز المتاح:</label>
+            <select id="slotSelect" required></select>
         </div>
-
-        <div id="doctorData" class="hidden">
-            <div class="control-panel">
-                <h3>إعدادات اليوم والمواعيد المتاحة</h3>
-                <div class="form-group">
-                    <label>تحديد اليوم الحالي:</label>
-                    <div class="flex-row">
-                        <input type="text" id="currentDayInput" placeholder="مثال: الأحد 2026/08/16">
-                        <button class="btn-blue" style="width: 120px;" onclick="saveDay()">حفظ اليوم</button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>إضافة رقم وموعد جديد:</label>
-                    <div class="flex-row">
-                        <input type="number" id="newSlotId" placeholder="الرقم (مثلاً 6)" style="width: 30%;">
-                        <input type="text" id="newSlotTime" placeholder="الوقت (مثلاً 06:30 مساءً)" style="width: 50%;">
-                        <button class="btn-blue" style="width: 20%;" onclick="addSlot()">إضافة</button>
-                    </div>
-                </div>
-            </div>
-
-            <h3>المواعيد المتاحة حالياً للجدول</h3>
-            <table class="schedule-table">
-                <thead>
-                    <tr>
-                        <th>الرقم</th>
-                        <th>الوقت</th>
-                        <th>الإجراء</th>
-                    </tr>
-                </thead>
-                <tbody id="doctorSlotsTable"></tbody>
-            </table>
-
-            <hr style="margin: 25px 0;">
-
-            <h3>سجل المواعيد المحجوزة</h3>
-            <table class="schedule-table">
-                <thead>
-                    <tr>
-                        <th>الرقم</th>
-                        <th>الوقت</th>
-                        <th>الاسم</th>
-                        <th>الهاتف</th>
-                        <th>التفاصيل</th>
-                    </tr>
-                </thead>
-                <tbody id="appointmentsTable"></tbody>
-            </table>
-            
-            <button class="btn-red" style="margin-top: 15px;" onclick="resetBookings()">مسح المواعيد المحجوزة فقط</button>
+        <div class="form-group">
+            <label>اسم المريض الكامل:</label>
+            <input type="text" id="name" placeholder="أدخل اسمك الثلاثي" required>
         </div>
-    </div>
+        <div class="form-group">
+            <label>رقم الهاتف:</label>
+            <input type="tel" id="phone" placeholder="07xxxxxxxx" required>
+        </div>
+        <div class="form-group">
+            <label>العنوان / السكن:</label>
+            <input type="text" id="address" placeholder="المحافظة - المنطقة" required>
+        </div>
+        <div class="form-group">
+            <label>تفاصيل الحجز / الأعراض:</label>
+            <textarea id="notes" rows="3" placeholder="اكتب سبب الزيارة..." required></textarea>
+        </div>
+        <button type="submit">تأكيد إرسال الحجز عبر الواتساب</button>
+    </form>
 </div>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
-    var DOCTOR_PHONE = "9647854777816"; 
+    const firebaseConfig = {
+      apiKey: "AIzaSyA083dRD4EYwVj-Y--AsqOzpz7ewhZlmYo",
+      authDomain: "clinic-system-98d2e.firebaseapp.com",
+      databaseURL: "https://clinic-system-98d2e-default-rtdb.firebaseio.com",
+      projectId: "clinic-system-98d2e",
+      storageBucket: "clinic-system-98d2e.firebasestorage.app",
+      messagingSenderId: "1025874349100",
+      appId: "1:1025874349100:web:6fe72cebe668705a4c1589"
+    };
 
-    var DEFAULT_SLOTS = [
-        { id: 1, time: "04:00 مساءً" },
-        { id: 2, time: "04:30 مساءً" },
-        { id: 3, time: "05:00 مساءً" },
-        { id: 4, time: "05:30 مساءً" },
-        { id: 5, time: "06:00 مساءً" }
-    ];
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const DOCTOR_PHONE = "9647854777816";
 
-    function getSlots() {
-        var saved = localStorage.getItem('clinic_slots');
-        return saved ? JSON.parse(saved) : DEFAULT_SLOTS;
-    }
+    // جلب عنوان اليوم
+    db.ref('clinic_day').on('value', snapshot => {
+        const day = snapshot.val() || "اليوم";
+        document.getElementById('dayTitle').textContent = "جدول المواعيد - " + day;
+    });
 
-    function initSystem() {
-        var savedDay = localStorage.getItem('clinic_day') || "اليوم";
-        document.getElementById('dayTitle').textContent = "جدول المواعيد - " + savedDay;
-        document.getElementById('currentDayInput').value = savedDay;
-        renderPatientSchedule();
-    }
+    // جلب المواعيد المحجوزة والأوقات المتاحة
+    db.ref().on('value', snapshot => {
+        const data = snapshot.val() || {};
+        const slots = data.slots || [
+            { id: 1, time: "04:00 مساءً" },
+            { id: 2, time: "04:30 مساءً" },
+            { id: 3, time: "05:00 مساءً" },
+            { id: 4, time: "05:30 مساءً" },
+            { id: 5, time: "06:00 مساءً" }
+        ];
+        const bookings = data.bookings || {};
 
-    function renderPatientSchedule() {
-        var slots = getSlots();
-        var bookings = JSON.parse(localStorage.getItem('clinic_bookings') || '[]');
-        var scheduleBody = document.getElementById('patientScheduleBody');
-        var slotSelect = document.getElementById('slotSelect');
+        const scheduleBody = document.getElementById('patientScheduleBody');
+        const slotSelect = document.getElementById('slotSelect');
         
         scheduleBody.innerHTML = '';
         slotSelect.innerHTML = '<option value="">-- اختر رقماً متاحاً --</option>';
 
-        slots.forEach(function(slot) {
-            var isBooked = bookings.some(function(b) { return b.slotId == slot.id; });
-            var row = document.createElement('tr');
-            var statusText = isBooked ? 'محجوز' : 'متاح';
-            var statusClass = isBooked ? 'booked' : 'available';
+        slots.forEach(slot => {
+            const isBooked = !!bookings[slot.id];
+            const row = document.createElement('tr');
+            const statusText = isBooked ? 'محجوز' : 'متاح';
+            const statusClass = isBooked ? 'booked' : 'available';
 
-            row.innerHTML = '<td><strong>#' + slot.id + '</strong></td>' +
-                            '<td>' + slot.time + '</td>' +
-                            '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>';
+            row.innerHTML = `<td><strong>#${slot.id}</strong></td>
+                            <td>${slot.time}</td>
+                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>`;
             
             scheduleBody.appendChild(row);
 
             if (!isBooked) {
-                var option = document.createElement('option');
+                const option = document.createElement('option');
                 option.value = slot.id;
-                option.textContent = 'حجز رقم #' + slot.id + ' (' + slot.time + ')';
+                option.textContent = `حجز رقم #${slot.id} (${slot.time})`;
                 slotSelect.appendChild(option);
             }
         });
-    }
+    });
 
-    function saveDay() {
-        var dayVal = document.getElementById('currentDayInput').value;
-        if(dayVal) {
-            localStorage.setItem('clinic_day', dayVal);
-            document.getElementById('dayTitle').textContent = "جدول المواعيد - " + dayVal;
-            alert("تم حفظ تاريخ اليوم بنجاح");
-        }
-    }
-
-    function addSlot() {
-        var id = document.getElementById('newSlotId').value;
-        var time = document.getElementById('newSlotTime').value;
-
-        if (!id || !time) {
-            alert("يرجى إدخال الرقم والوقت");
-            return;
-        }
-
-        var slots = getSlots();
-        var exists = slots.some(function(s) { return s.id == id; });
-        if (exists) {
-            alert("هذا الرقم موجود بالفعل!");
-            return;
-        }
-
-        slots.push({ id: parseInt(id), time: time });
-        slots.sort(function(a, b) { return a.id - b.id; });
+    // إرسال الحجز
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
         
-        localStorage.setItem('clinic_slots', JSON.stringify(slots));
-        document.getElementById('newSlotId').value = '';
-        document.getElementById('newSlotTime').value = '';
-        
-        loadDoctorSlots();
-        renderPatientSchedule();
+        const selectedSlotId = document.getElementById('slotSelect').value;
+        if (!selectedSlotId) return alert("يرجى اختيار رقم حجز متاح");
+
+        db.ref('slots').once('value').then(snapshot => {
+            const slots = snapshot.val() || [];
+            const slotInfo = slots.find(s => s.id == selectedSlotId);
+
+            const bookingData = {
+                slotId: selectedSlotId,
+                time: slotInfo ? slotInfo.time : '',
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                notes: document.getElementById('notes').value,
+                timestamp: Date.now()
+            };
+
+            // حفظ الحجز في Firebase
+            db.ref('bookings/' + selectedSlotId).set(bookingData).then(() => {
+                db.ref('clinic_day').once('value').then(daySnap => {
+                    const currentDay = daySnap.val() || 'اليوم';
+                    const message = `*طلب حجز موعد جديد*\n\n` +
+                        `*اليوم:* ${currentDay}\n` +
+                        `*رقم الحجز:* #${bookingData.slotId}\n` +
+                        `*الموعد:* ${bookingData.time}\n` +
+                        `*الاسم:* ${bookingData.name}\n` +
+                        `*الهاتف:* ${bookingData.phone}\n` +
+                        `*العنوان:* ${bookingData.address}\n` +
+                        `*التفاصيل:* ${bookingData.notes}`;
+
+                    window.open(`https://wa.me/${DOCTOR_PHONE}?text=${encodeURIComponent(message)}`, '_blank');
+                    document.getElementById('bookingForm').reset();
+                });
+            });
+        });
+    });
+</script>
+</body>
+</html>
+tSchedule();
     }
 
     function deleteSlot(id) {
